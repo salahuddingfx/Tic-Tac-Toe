@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe Challenge</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Intro Animation */
+        .intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: slideUp 2s ease-in-out 2s forwards;
+        }
+
+        .intro-content {
+            text-align: center;
+            color: white;
+        }
+
+        .intro-text {
+            font-size: 4rem;
+            font-weight: bold;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.5s forwards;
+            margin-bottom: 20px;
+        }
+
+        .intro-subtitle {
+            font-size: 1.5rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            to { transform: translateY(-100%); }
+        }
+
+        .main-content {
+            opacity: 0;
+            animation: fadeIn 1s ease-out 2.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .game-title {
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .game-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .game-status {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #333;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 300px;
+            margin: 0 auto 25px;
+        }
+
+        .game-cell {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border: 3px solid #e9ecef;
+            border-radius: 15px;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-cell:hover {
+            background: #e9ecef;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .game-cell.x {
+            color: #ff6b6b;
+            background: #ffe0e0;
+            border-color: #ff6b6b;
+        }
+
+        .game-cell.o {
+            color: #4ecdc4;
+            background: #e0f7f7;
+            border-color: #4ecdc4;
+        }
+
+        .game-cell.winning {
+            background: #fff3cd !important;
+            border-color: #ffc107 !important;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .game-timer {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .control-btn.reset-scores {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .score-x {
+            color: #ff6b6b;
+        }
+
+        .score-o {
+            color: #4ecdc4;
+        }
+
+        .developer-button {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .developer-button:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .developer-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .developer-name {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .social-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .social-modal.show {
+            display: flex;
+        }
+
+        .social-content {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .modal-subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            color: white;
+        }
+
+        .social-btn.facebook {
+            background: linear-gradient(45deg, #3b5998, #8b9dc3);
+        }
+
+        .social-btn.twitter {
+            background: linear-gradient(45deg, #1da1f2, #0d8bd9);
+        }
+
+        .social-btn.instagram {
+            background: linear-gradient(45deg, #e1306c, #fd1d1d);
+        }
+
+        .social-btn.linkedin {
+            background: linear-gradient(45deg, #0077b5, #00a0dc);
+        }
+
+        .social-btn.github {
+            background: linear-gradient(45deg, #333, #666);
+        }
+
+        .social-btn.youtube {
+            background: linear-gradient(45deg, #ff0000, #cc0000);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .intro-text {
+                font-size: 2.5rem;
+            }
+            
+            .game-title {
+                font-size: 2.5rem;
+            }
+            
+            .game-container {
+                padding: 25px;
+            }
+            
+            .game-cell {
+                font-size: 2rem;
+            }
+            
+            .game-board {
+                max-width: 280px;
+                gap: 10px;
+            }
+            
+            .game-controls {
+                gap: 8px;
+            }
+            
+            .control-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            .social-links {
+                gap: 10px;
+            }
+            
+            .social-btn {
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .social-content {
+                padding: 30px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .intro-text {
+                font-size: 2rem;
+            }
+            
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .game-board {
+                max-width: 250px;
+            }
+            
+            .game-cell {
+                font-size: 1.8rem;
+            }
+            
+            .control-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .social-btn {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body><!-- Intro Animation -->
+  <div class="intro-overlay" id="introOverlay">
+   <div class="intro-content">
+    <div class="intro-text">
+     🎮 Game Loading...
+    </div>
+    <div class="intro-subtitle">
+     Get Ready to Play!
+    </div>
+   </div>
+  </div>
+  <div class="container main-content"><!-- Game Title -->
+   <h1 class="game-title" id="gameTitle">🎮 Tic Tac Toe Challenge</h1>
+   <p class="game-subtitle">Classic strategy game for two players!</p><!-- Game Container -->
+   <div class="game-container"><!-- Score Board -->
+    <div class="score-board">
+     <div class="score-item">
+      <div class="score-label">
+       Player X
+      </div>
+      <div class="score-value score-x" id="scoreX">
+       0
+      </div>
+     </div>
+     <div class="score-item">
+      <div class="score-label">
+       Ties
+      </div>
+      <div class="score-value" id="scoreTies">
+       0
+      </div>
+     </div>
+     <div class="score-item">
+      <div class="score-label">
+       Player O
+      </div>
+      <div class="score-value score-o" id="scoreO">
+       0
+      </div>
+     </div>
+    </div><!-- Game Timer -->
+    <div class="game-timer" id="gameTimer"><i class="fas fa-clock"></i> Time: 00:00
+    </div><!-- Game Status -->
+    <div class="game-status" id="gameStatus">
+     Player X's Turn
+    </div><!-- Game Board -->
+    <div class="game-board" id="gameBoard"><button class="game-cell" data-index="0"></button> <button class="game-cell" data-index="1"></button> <button class="game-cell" data-index="2"></button> <button class="game-cell" data-index="3"></button> <button class="game-cell" data-index="4"></button> <button class="game-cell" data-index="5"></button> <button class="game-cell" data-index="6"></button> <button class="game-cell" data-index="7"></button> <button class="game-cell" data-index="8"></button>
+    </div><!-- Game Controls -->
+    <div class="game-controls"><button class="control-btn" id="startGameBtn"> <i class="fas fa-play"></i> Start Game </button> <button class="control-btn" id="newGameBtn"> <i class="fas fa-redo-alt"></i> Reset Game </button> <button class="control-btn reset-scores" id="resetScoresBtn"> <i class="fas fa-trash-alt"></i> Reset Scores </button>
+    </div>
+   </div><!-- Developer Button --> <button class="developer-button" id="developerBtn">
+    <div class="developer-title"><i class="fas fa-code"></i> Developer Profile
+    </div>
+    <div class="developer-name" id="developerName">
+     Salah Uddin Kader
+    </div></button>
+  </div><!-- Social Media Modal -->
+  <div class="social-modal" id="socialModal">
+   <div class="social-content"><button class="close-modal" id="closeModal"> <i class="fas fa-times"></i> </button>
+    <div class="modal-title" id="modalDeveloperName">
+     Salah Uddin Kader
+    </div>
+    <div class="modal-subtitle">
+     Connect with me on social media!
+    </div><!-- Social Links -->
+    <div class="social-links"><a href="https://facebook.com/salahuddingfx" target="_blank" rel="noopener noreferrer" class="social-btn facebook"> <i class="fab fa-facebook-f"></i> <span>Facebook</span> </a> <a href="https://twitter.com/salahuddingfx" target="_blank" rel="noopener noreferrer" class="social-btn twitter"> <i class="fab fa-twitter"></i> <span>Twitter</span> </a> <a href="https://instagram.com/salahuddingfx" target="_blank" rel="noopener noreferrer" class="social-btn instagram"> <i class="fab fa-instagram"></i> <span>Instagram</span> </a> <a href="https://linkedin.com/in/salahuddingfx" target="_blank" rel="noopener noreferrer" class="social-btn linkedin"> <i class="fab fa-linkedin-in"></i> <span>LinkedIn</span> </a> <a href="https://github.com/salahuddingfx" target="_blank" rel="noopener noreferrer" class="social-btn github"> <i class="fab fa-github"></i> <span>GitHub</span> </a> 
+    </div>
+   </div>
+  </div>
+  <script>
+        // Enhanced Tic Tac Toe Game with Timer
+        class TicTacToe {
+            constructor() {
+                this.board = Array(9).fill('');
+                this.currentPlayer = 'X';
+                this.gameActive = false;
+                this.gameStarted = false;
+                this.cells = document.querySelectorAll('.game-cell');
+                this.statusElement = document.getElementById('gameStatus');
+                this.timerElement = document.getElementById('gameTimer');
+                this.startGameButton = document.getElementById('startGameBtn');
+                this.newGameButton = document.getElementById('newGameBtn');
+
+                this.resetScoresButton = document.getElementById('resetScoresBtn');
+                this.scores = { X: 0, O: 0, ties: 0 };
+                this.gameStartTime = null;
+                this.gameTimer = null;
+                this.gameTime = 0;
+                
+                this.init();
+            }
+
+            init() {
+                this.cells.forEach(cell => {
+                    cell.addEventListener('click', (e) => this.handleCellClick(e));
+                });
+                this.startGameButton.addEventListener('click', () => this.startGame());
+                this.newGameButton.addEventListener('click', () => this.resetGame());
+
+                this.resetScoresButton.addEventListener('click', () => this.resetAllScores());
+                this.updateScoreDisplay();
+                this.statusElement.innerHTML = '🎮 Click "Start Game" to begin!';
+                this.updateTimerDisplay();
+            }
+
+            startTimer() {
+                this.gameStartTime = Date.now();
+                this.gameTime = 0;
+                this.gameTimer = setInterval(() => {
+                    if (this.gameActive) {
+                        this.gameTime = Math.floor((Date.now() - this.gameStartTime) / 1000);
+                        this.updateTimerDisplay();
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.gameTimer) {
+                    clearInterval(this.gameTimer);
+                    this.gameTimer = null;
+                }
+            }
+
+            updateTimerDisplay() {
+                const minutes = Math.floor(this.gameTime / 60);
+                const seconds = this.gameTime % 60;
+                const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                this.timerElement.innerHTML = `<i class="fas fa-clock"></i> Time: ${timeString}`;
+            }
+
+            startGame() {
+                this.gameActive = true;
+                this.gameStarted = true;
+                this.currentPlayer = 'X';
+                this.statusElement.textContent = `Player ${this.currentPlayer}'s Turn`;
+                this.startTimer();
+                this.startGameButton.disabled = true;
+                this.startGameButton.style.opacity = '0.6';
+            }
+
+
+
+            handleCellClick(e) {
+                const index = parseInt(e.target.dataset.index);
+                
+                if (this.board[index] !== '' || !this.gameActive || !this.gameStarted) return;
+                
+                this.board[index] = this.currentPlayer;
+                e.target.textContent = this.currentPlayer;
+                e.target.classList.add(this.currentPlayer.toLowerCase());
+                
+                if (this.checkWinner()) {
+                    this.scores[this.currentPlayer]++;
+                    this.statusElement.innerHTML = `🎉 Player ${this.currentPlayer} Wins! (${this.formatTime(this.gameTime)})`;
+                    this.gameActive = false;
+                    this.stopTimer();
+                    this.highlightWinningCells();
+                    this.updateScoreDisplay();
+                    this.enableStartButton();
+                } else if (this.board.every(cell => cell !== '')) {
+                    this.scores.ties++;
+                    this.statusElement.innerHTML = `🤝 It's a Tie! (${this.formatTime(this.gameTime)})`;
+                    this.gameActive = false;
+                    this.stopTimer();
+                    this.updateScoreDisplay();
+                    this.enableStartButton();
+                } else {
+                    this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+                    this.statusElement.textContent = `Player ${this.currentPlayer}'s Turn`;
+                }
+            }
+
+            enableStartButton() {
+                this.startGameButton.disabled = false;
+                this.startGameButton.style.opacity = '1';
+            }
+
+            formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            checkWinner() {
+                const winPatterns = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                    [0, 4, 8], [2, 4, 6]
+                ];
+
+                this.winningPattern = winPatterns.find(pattern => {
+                    const [a, b, c] = pattern;
+                    return this.board[a] && this.board[a] === this.board[b] && this.board[a] === this.board[c];
+                });
+
+                return this.winningPattern;
+            }
+
+            highlightWinningCells() {
+                if (this.winningPattern) {
+                    this.winningPattern.forEach(index => {
+                        this.cells[index].classList.add('winning');
+                    });
+                }
+            }
+
+            updateScoreDisplay() {
+                document.getElementById('scoreX').textContent = this.scores.X;
+                document.getElementById('scoreO').textContent = this.scores.O;
+                document.getElementById('scoreTies').textContent = this.scores.ties;
+            }
+
+            resetGame() {
+                this.stopTimer();
+                this.board = Array(9).fill('');
+                this.currentPlayer = 'X';
+                this.gameActive = false;
+                this.gameStarted = false;
+                this.statusElement.innerHTML = '🎮 Click "Start Game" to begin!';
+                this.winningPattern = null;
+                this.gameTime = 0;
+                this.updateTimerDisplay();
+                
+                this.cells.forEach(cell => {
+                    cell.textContent = '';
+                    cell.classList.remove('x', 'o', 'winning');
+                });
+                
+                this.enableStartButton();
+            }
+
+            resetAllScores() {
+                if (confirm('Are you sure you want to reset all scores?')) {
+                    this.scores = { X: 0, O: 0, ties: 0 };
+                    this.updateScoreDisplay();
+                    this.resetGame();
+                }
+            }
+        }
+
+        // Element SDK Configuration
+        const defaultConfig = {
+            game_title: "🎮 Tic Tac Toe Challenge",
+            developer_name: "Salah Uddin Kader",
+            primary_color: "#667eea",
+            secondary_color: "#764ba2",
+            font_family: "Segoe UI",
+            font_size: 16
+        };
+
+        async function render(config) {
+            // Update text content
+            const gameTitle = document.getElementById('gameTitle');
+            if (gameTitle) {
+                gameTitle.textContent = config.game_title || defaultConfig.game_title;
+            }
+            
+            const developerName = document.getElementById('developerName');
+            if (developerName) {
+                developerName.textContent = config.developer_name || defaultConfig.developer_name;
+            }
+            
+            const modalDeveloperName = document.getElementById('modalDeveloperName');
+            if (modalDeveloperName) {
+                modalDeveloperName.textContent = config.developer_name || defaultConfig.developer_name;
+            }
+
+            // Apply colors
+            const primaryColor = config.primary_color || defaultConfig.primary_color;
+            const secondaryColor = config.secondary_color || defaultConfig.secondary_color;
+            
+            // Update background gradient
+            document.body.style.background = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`;
+            
+            // Update control buttons gradient
+            const controlBtns = document.querySelectorAll('.control-btn:not(.reset-scores)');
+            controlBtns.forEach(btn => {
+                btn.style.background = `linear-gradient(45deg, ${primaryColor}, ${secondaryColor})`;
+            });
+
+            // Apply font
+            const customFont = config.font_family || defaultConfig.font_family;
+            const baseFontStack = 'Tahoma, Geneva, Verdana, sans-serif';
+            document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
+
+            // Apply font size
+            const baseSize = config.font_size || defaultConfig.font_size;
+            document.body.style.fontSize = `${baseSize}px`;
+            
+            const gameTitle2 = document.querySelector('.game-title');
+            if (gameTitle2) {
+                gameTitle2.style.fontSize = `${baseSize * 1.875}px`;
+            }
+            
+            const gameSubtitle = document.querySelector('.game-subtitle');
+            if (gameSubtitle) {
+                gameSubtitle.style.fontSize = `${baseSize * 1.125}px`;
+            }
+            
+            const gameStatus = document.querySelector('.game-status');
+            if (gameStatus) {
+                gameStatus.style.fontSize = `${baseSize * 1.25}px`;
+            }
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [
+                    {
+                        get: () => config.primary_color || defaultConfig.primary_color,
+                        set: (value) => {
+                            config.primary_color = value;
+                            window.elementSdk.setConfig({ primary_color: value });
+                        }
+                    },
+                    {
+                        get: () => config.secondary_color || defaultConfig.secondary_color,
+                        set: (value) => {
+                            config.secondary_color = value;
+                            window.elementSdk.setConfig({ secondary_color: value });
+                        }
+                    }
+                ],
+                borderables: [],
+                fontEditable: {
+                    get: () => config.font_family || defaultConfig.font_family,
+                    set: (value) => {
+                        config.font_family = value;
+                        window.elementSdk.setConfig({ font_family: value });
+                    }
+                },
+                fontSizeable: {
+                    get: () => config.font_size || defaultConfig.font_size,
+                    set: (value) => {
+                        config.font_size = value;
+                        window.elementSdk.setConfig({ font_size: value });
+                    }
+                }
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ["game_title", config.game_title || defaultConfig.game_title],
+                ["developer_name", config.developer_name || defaultConfig.developer_name]
+            ]);
+        }
+
+        // Modal functionality
+        function initModal() {
+            const developerBtn = document.getElementById('developerBtn');
+            const socialModal = document.getElementById('socialModal');
+            const closeModal = document.getElementById('closeModal');
+
+            developerBtn.addEventListener('click', () => {
+                socialModal.classList.add('show');
+            });
+
+            closeModal.addEventListener('click', () => {
+                socialModal.classList.remove('show');
+            });
+
+            socialModal.addEventListener('click', (e) => {
+                if (e.target === socialModal) {
+                    socialModal.classList.remove('show');
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && socialModal.classList.contains('show')) {
+                    socialModal.classList.remove('show');
+                }
+            });
+        }
+
+        // Initialize everything when page loads
+        window.addEventListener('load', () => {
+            // Initialize game
+            new TicTacToe();
+            
+            // Initialize modal
+            initModal();
+        });
+
+        // Initialize Element SDK
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                render,
+                mapToCapabilities,
+                mapToEditPanelValues
+            });
+        }
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98f3dd18c2dc25b1',t:'MTc2MDU3ODk4OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
